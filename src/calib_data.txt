@@ -1,0 +1,118 @@
+*** Added sample 1, p_x = 0.466, p_y = 0.325, p_size = 0.206, skew = 0.157
+*** Added sample 2, p_x = 0.626, p_y = 0.343, p_size = 0.207, skew = 0.197
+*** Added sample 3, p_x = 0.768, p_y = 0.378, p_size = 0.211, skew = 0.258
+*** Added sample 4, p_x = 0.891, p_y = 0.414, p_size = 0.217, skew = 0.321
+*** Added sample 5, p_x = 0.335, p_y = 0.271, p_size = 0.211, skew = 0.124
+*** Added sample 6, p_x = 0.221, p_y = 0.258, p_size = 0.216, skew = 0.045
+*** Added sample 7, p_x = 0.518, p_y = 0.500, p_size = 0.206, skew = 0.184
+*** Added sample 8, p_x = 0.591, p_y = 0.596, p_size = 0.201, skew = 0.252
+*** Added sample 9, p_x = 0.663, p_y = 0.542, p_size = 0.196, skew = 0.324
+*** Added sample 10, p_x = 0.717, p_y = 0.334, p_size = 0.202, skew = 0.360
+*** Added sample 11, p_x = 0.721, p_y = 0.164, p_size = 0.208, skew = 0.387
+*** Added sample 12, p_x = 0.545, p_y = 0.120, p_size = 0.210, skew = 0.119
+*** Added sample 13, p_x = 0.468, p_y = 0.452, p_size = 0.201, skew = 0.082
+*** Added sample 14, p_x = 0.357, p_y = 0.380, p_size = 0.202, skew = 0.016
+*** Added sample 15, p_x = 0.321, p_y = 0.345, p_size = 0.189, skew = 0.215
+*** Added sample 16, p_x = 0.396, p_y = 0.542, p_size = 0.185, skew = 0.216
+*** Added sample 17, p_x = 0.453, p_y = 0.703, p_size = 0.184, skew = 0.224
+*** Added sample 18, p_x = 0.510, p_y = 0.815, p_size = 0.187, skew = 0.254
+*** Added sample 19, p_x = 0.571, p_y = 0.891, p_size = 0.208, skew = 0.298
+*** Added sample 20, p_x = 0.409, p_y = 0.405, p_size = 0.209, skew = 0.252
+*** Added sample 21, p_x = 0.318, p_y = 0.174, p_size = 0.219, skew = 0.217
+*** Added sample 22, p_x = 0.654, p_y = 0.177, p_size = 0.235, skew = 0.195
+*** Added sample 23, p_x = 0.740, p_y = 0.240, p_size = 0.238, skew = 0.248
+*** Added sample 24, p_x = 0.855, p_y = 0.131, p_size = 0.227, skew = 0.326
+*** Added sample 25, p_x = 0.794, p_y = 0.226, p_size = 0.228, skew = 0.433
+*** Added sample 26, p_x = 0.848, p_y = 0.220, p_size = 0.240, skew = 0.572
+*** Added sample 27, p_x = 0.707, p_y = 0.155, p_size = 0.239, skew = 0.535
+*** Added sample 28, p_x = 0.589, p_y = 0.127, p_size = 0.239, skew = 0.464
+*** Added sample 29, p_x = 0.472, p_y = 0.102, p_size = 0.242, skew = 0.382
+*** Added sample 30, p_x = 0.340, p_y = 0.076, p_size = 0.247, skew = 0.296
+*** Added sample 31, p_x = 0.226, p_y = 0.062, p_size = 0.253, skew = 0.219
+*** Added sample 32, p_x = 0.181, p_y = 0.177, p_size = 0.247, skew = 0.264
+*** Added sample 33, p_x = 0.102, p_y = 0.297, p_size = 0.258, skew = 0.275
+*** Added sample 34, p_x = 0.164, p_y = 0.261, p_size = 0.263, skew = 0.172
+*** Added sample 35, p_x = 0.082, p_y = 0.310, p_size = 0.285, skew = 0.109
+*** Added sample 36, p_x = 0.173, p_y = 0.403, p_size = 0.275, skew = 0.083
+*** Added sample 37, p_x = 0.261, p_y = 0.501, p_size = 0.268, skew = 0.051
+*** Added sample 38, p_x = 0.342, p_y = 0.592, p_size = 0.263, skew = 0.018
+*** Added sample 39, p_x = 0.433, p_y = 0.697, p_size = 0.260, skew = 0.035
+*** Added sample 40, p_x = 0.516, p_y = 0.796, p_size = 0.260, skew = 0.071
+*** Added sample 41, p_x = 0.454, p_y = 0.363, p_size = 0.259, skew = 0.321
+*** Added sample 42, p_x = 0.517, p_y = 0.276, p_size = 0.261, skew = 0.377
+**** Calibrating ****
+mono pinhole calibration...
+D = [0.031324655386541514, -0.0010664888422968182, 0.018366108772208654, 0.02358621392418331, 0.0]
+K = [675.6767434608014, 0.0, 374.7143873519979, 0.0, 679.430849723005, 274.4054922695016, 0.0, 0.0, 1.0]
+R = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+P = [679.6298217773438, 0.0, 384.6868344296672, 0.0, 0.0, 691.4208984375, 279.6255856544303, 0.0, 0.0, 0.0, 1.0, 0.0]
+None
+# oST version 5.0 parameters
+
+
+[image]
+
+width
+640
+
+height
+480
+
+[nexigo_webcam]
+
+camera matrix
+675.676743 0.000000 374.714387
+0.000000 679.430850 274.405492
+0.000000 0.000000 1.000000
+
+distortion
+0.031325 -0.001066 0.018366 0.023586 0.000000
+
+rectification
+1.000000 0.000000 0.000000
+0.000000 1.000000 0.000000
+0.000000 0.000000 1.000000
+
+projection
+679.629822 0.000000 384.686834 0.000000
+0.000000 691.420898 279.625586 0.000000
+0.000000 0.000000 1.000000 0.000000
+
+('Wrote calibration data to', '/tmp/calibrationdata.tar.gz')
+('Wrote calibration data to', '/tmp/calibrationdata.tar.gz')
+D = [0.031324655386541514, -0.0010664888422968182, 0.018366108772208654, 0.02358621392418331, 0.0]
+K = [675.6767434608014, 0.0, 374.7143873519979, 0.0, 679.430849723005, 274.4054922695016, 0.0, 0.0, 1.0]
+R = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+P = [679.6298217773438, 0.0, 384.6868344296672, 0.0, 0.0, 691.4208984375, 279.6255856544303, 0.0, 0.0, 0.0, 1.0, 0.0]
+# oST version 5.0 parameters
+
+
+[image]
+
+width
+640
+
+height
+480
+
+[nexigo_webcam]
+
+camera matrix
+675.676743 0.000000 374.714387
+0.000000 679.430850 274.405492
+0.000000 0.000000 1.000000
+
+distortion
+0.031325 -0.001066 0.018366 0.023586 0.000000
+
+rectification
+1.000000 0.000000 0.000000
+0.000000 1.000000 0.000000
+0.000000 0.000000 1.000000
+
+projection
+679.629822 0.000000 384.686834 0.000000
+0.000000 691.420898 279.625586 0.000000
+0.000000 0.000000 1.000000 0.000000
+
+[ros2run]: Killed

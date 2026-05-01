@@ -26,6 +26,9 @@ setup(
             'nudge_joint = auro_robo_arm.nudge_joint:main',
             'pulse_gripper = auro_robo_arm.pulse_gripper:main',
             'tag_detector = auro_robo_arm.tag_detector:main',
+            'arm_tag_follower = auro_robo_arm.arm_tag_follower:main',
+            'waist_tag_scanner = auro_robo_arm.waist_tag_scanner:main',
+            'safe_arm_stow = auro_robo_arm.safe_arm_stow:main',
         ],
     },
 )

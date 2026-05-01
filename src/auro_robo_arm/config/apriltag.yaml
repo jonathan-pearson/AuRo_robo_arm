@@ -2,7 +2,7 @@
     ros__parameters:
         image_transport: raw
         family: 36h11          # tag family (36h11 is the most common)
-        size: 0.1              # tag edge size in metres (for pose only, not detection)
+        size: 0.08              # tag edge size in metres (for pose only, not detection)
         max_hamming: 0         # 0 = exact match only; raise to 1-2 if missing detections
 
         detector:

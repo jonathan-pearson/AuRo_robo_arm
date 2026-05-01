@@ -339,6 +339,102 @@ profile_acceleration: 1000
 
 This makes movements gentle and slow, which is useful for early testing. The `nudge_joint` helper also waits after each command. If `return_to_start:=true`, it performs a move out, waits, moves back, and waits again.
 
+## Camera Guard Mode
+
+The guard-mode launch brings up the arm driver, webcam, AprilTag detector, QR detector, and a waist-scan controller. It starts idle by default and waits for an external ROS actor to command it on or off.
+
+```bash
+cd /home/sanat/Arm_Robot/AuRo_robo_arm
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+
+ros2 launch auro_robo_arm waist_tag_scan.launch.py
+```
+
+The command topic is:
+
+```text
+/auro/command
+```
+
+Manual start command:
+
+```bash
+ros2 topic pub --once /auro/command std_msgs/msg/String "{data: turn_on}"
+```
+
+Manual stop/stow command:
+
+```bash
+ros2 topic pub --once /auro/command std_msgs/msg/String "{data: turn_off}"
+```
+
+Accepted on commands are `turn_on`, `on`, `start`, `enable`, and `run`.
+Accepted off commands are `turn_off`, `off`, `stop`, `disable`, `stow`, and `shutdown`.
+
+On startup, the scanner commands a default viewing posture before scanning:
+
+```text
+waist:        0
+shoulder:     0
+elbow:        0
+wrist_angle:  1.047 rad  # 60 deg
+wrist_rotate: 0
+```
+
+Then it sweeps the waist through:
+
+```text
+-0.45, -0.25, 0.0, 0.25, 0.45 rad
+```
+
+When AprilTag ID `0` is seen, the node logs detections and tracks the tag by making small `waist` and `wrist_angle` corrections to center it in the camera image. If the tag is lost, it resumes sweeping.
+
+Detection logs are written as JSON lines:
+
+```bash
+tail -f /tmp/auro_tag_scan.jsonl
+```
+
+Useful launch overrides:
+
+```bash
+ros2 launch auro_robo_arm waist_tag_scan.launch.py \
+  tag_id:=0 \
+  scan_positions:="-0.6,-0.3,0.0,0.3,0.6" \
+  dwell_sec:=1.5 \
+  track_deadband_px:=25.0
+```
+
+For manual testing, start scanning immediately instead of waiting for `/auro/command`:
+
+```bash
+ros2 launch auro_robo_arm waist_tag_scan.launch.py start_active:=true
+```
+
+If an axis tracks away from the tag instead of toward it, flip the relevant gain:
+
+```bash
+ros2 launch auro_robo_arm waist_tag_scan.launch.py waist_px_gain:=0.0008
+ros2 launch auro_robo_arm waist_tag_scan.launch.py wrist_px_gain:=-0.0008
+```
+
+On `turn_off`, the scanner stops scan/track commands, briefly holds the current arm posture, then stows:
+
+```text
+1. Home step 1: waist and wrist joints go home.
+2. Home step 2: shoulder goes home.
+3. Home step 3: elbow goes home last.
+4. Sleep pose: [0, -1.85, 1.55, 0.8, 0].
+5. Return to idle and wait for the next turn_on.
+```
+
+You can also run the stow sequence manually while the robot driver is still running:
+
+```bash
+ros2 launch auro_robo_arm safe_arm_stow.launch.py
+```
+
 ## Troubleshooting
 
 If scan finds no servos:

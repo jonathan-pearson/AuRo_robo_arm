@@ -77,7 +77,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument(
             'video_device',
-            default_value='/dev/video6',
+            default_value='/dev/video4',
             description='Video device path for the webcam.',
         ),
         DeclareLaunchArgument(

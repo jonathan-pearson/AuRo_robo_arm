@@ -112,6 +112,8 @@ def main() -> int:
         node = TagDetector()
         rclpy.spin(node)
         return 0
+    except KeyboardInterrupt:
+        return 130
     except Exception as exc:
         if node is not None:
             node.get_logger().error(str(exc))
@@ -121,7 +123,8 @@ def main() -> int:
     finally:
         if node is not None:
             node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
