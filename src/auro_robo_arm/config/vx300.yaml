@@ -1,7 +1,13 @@
+# Motor configuration for the 5-DOF Interbotix ViperX-300 used by AuRo.
+#
+# Joint limit registers are DYNAMIXEL position ticks derived from the
+# Trossen VX300 specification's default safe joint ranges:
+# waist +/-180 deg, shoulder +/-101 deg, elbow -101/+92 deg,
+# wrist_angle -107/+130 deg, wrist_rotate +/-180 deg.
 port: /dev/ttyDXL
 
-joint_order: [waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate]
-sleep_positions: [0, -1.85, 1.55, 0, 0.8, 0]
+joint_order: [waist, shoulder, elbow, wrist_angle, wrist_rotate, gripper]
+sleep_positions: [0, -1.85, 1.55, 0.8, 0, 0]
 
 joint_state_publisher:
   update_rate: 100
@@ -9,9 +15,14 @@ joint_state_publisher:
   topic_name: joint_states
 
 groups:
-  arm: [waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate]
+  arm: [waist, shoulder, elbow, wrist_angle, wrist_rotate]
 
 grippers:
+  gripper:
+    horn_radius: 0.022
+    arm_length: 0.036
+    left_finger: left_finger
+    right_finger: right_finger
 
 shadows:
   shoulder:
@@ -40,8 +51,8 @@ motors:
     Return_Delay_Time: 0
     Drive_Mode: 1
     Velocity_Limit: 131
-    Min_Position_Limit: 841
-    Max_Position_Limit: 2867
+    Min_Position_Limit: 898
+    Max_Position_Limit: 3197
     Secondary_ID: 255
 
   shoulder_shadow:
@@ -50,8 +61,8 @@ motors:
     Return_Delay_Time: 0
     Drive_Mode: 0
     Velocity_Limit: 131
-    Min_Position_Limit: 841
-    Max_Position_Limit: 2867
+    Min_Position_Limit: 898
+    Max_Position_Limit: 3197
     Secondary_ID: 2
 
   elbow:
@@ -74,8 +85,18 @@ motors:
     Max_Position_Limit: 3094
     Secondary_ID: 4
 
-  forearm_roll:
+  wrist_angle:
     ID: 6
+    Baud_Rate: 3
+    Return_Delay_Time: 0
+    Drive_Mode: 1
+    Velocity_Limit: 131
+    Min_Position_Limit: 830
+    Max_Position_Limit: 3526
+    Secondary_ID: 255
+
+  wrist_rotate:
+    ID: 7
     Baud_Rate: 3
     Return_Delay_Time: 0
     Drive_Mode: 0
@@ -84,17 +105,7 @@ motors:
     Max_Position_Limit: 4095
     Secondary_ID: 255
 
-  wrist_angle:
-    ID: 7
-    Baud_Rate: 3
-    Return_Delay_Time: 0
-    Drive_Mode: 1
-    Velocity_Limit: 131
-    Min_Position_Limit: 830
-    Max_Position_Limit: 3504
-    Secondary_ID: 255
-
-  wrist_rotate:
+  gripper:
     ID: 8
     Baud_Rate: 3
     Return_Delay_Time: 0

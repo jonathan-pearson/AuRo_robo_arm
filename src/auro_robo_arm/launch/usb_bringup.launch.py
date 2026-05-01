@@ -9,8 +9,10 @@ from launch.actions import (
     IncludeLaunchDescription,
     OpaqueFunction,
 )
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
 
 
 def _bool_text(value: str) -> str:
@@ -58,6 +60,7 @@ def _launch_setup(context, *args, **kwargs):
     robot_name = LaunchConfiguration('robot_name').perform(context) or robot_model
     port = LaunchConfiguration('port').perform(context)
     motor_configs = LaunchConfiguration('motor_configs').perform(context)
+    rvizconfig = LaunchConfiguration('rvizconfig').perform(context)
     use_rviz = _bool_text(LaunchConfiguration('use_rviz').perform(context))
     use_sim = _bool_text(LaunchConfiguration('use_sim').perform(context))
     use_sim_time = _bool_text(
@@ -65,10 +68,19 @@ def _launch_setup(context, *args, **kwargs):
     )
     load_configs = _bool_text(LaunchConfiguration('load_configs').perform(context))
 
+    auro_share_dir = get_package_share_directory('auro_robo_arm')
     xsarm_control_dir = get_package_share_directory('interbotix_xsarm_control')
     xsarm_launch = Path(xsarm_control_dir) / 'launch' / 'xsarm_control.launch.py'
     if not motor_configs:
-        motor_configs = str(Path(xsarm_control_dir) / 'config' / f'{robot_model}.yaml')
+        local_motor_configs = Path(auro_share_dir) / 'config' / f'{robot_model}.yaml'
+        if local_motor_configs.is_file():
+            motor_configs = str(local_motor_configs)
+        else:
+            motor_configs = str(
+                Path(xsarm_control_dir) / 'config' / f'{robot_model}.yaml'
+            )
+    if not rvizconfig:
+        rvizconfig = str(Path(auro_share_dir) / 'rviz' / 'vx300.rviz')
     mode_configs = _write_mode_config(robot_name, port)
 
     return [
@@ -80,11 +92,21 @@ def _launch_setup(context, *args, **kwargs):
                 'motor_configs': motor_configs,
                 'mode_configs': mode_configs,
                 'load_configs': load_configs,
-                'use_rviz': use_rviz,
+                'use_rviz': 'false',
                 'use_sim': use_sim,
                 'use_sim_time': use_sim_time,
             }.items(),
-        )
+        ),
+        Node(
+            condition=IfCondition(use_rviz),
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            namespace=robot_name,
+            arguments=['-d', rvizconfig],
+            parameters=[{'use_sim_time': use_sim_time == 'true'}],
+            output={'both': 'log'},
+        ),
     ]
 
 
@@ -96,8 +118,8 @@ def generate_launch_description():
                 'robot_model',
                 default_value='vx300',
                 description=(
-                    'Interbotix arm model, for example vx300, wx250s, or '
-                    'vx300s.'
+                    'Interbotix arm model. This package is configured for '
+                    'the 5-DOF vx300.'
                 ),
             ),
             DeclareLaunchArgument(
@@ -114,8 +136,17 @@ def generate_launch_description():
                 'motor_configs',
                 default_value='',
                 description=(
-                    'Optional motor config YAML. Leave empty to use the '
+                    'Optional motor config YAML. Leave empty to use this '
+                    "package's config when available, otherwise the "
                     'Interbotix config for robot_model.'
+                ),
+            ),
+            DeclareLaunchArgument(
+                'rvizconfig',
+                default_value='',
+                description=(
+                    'Optional RViz config. Leave empty to use the AuRo VX300 '
+                    'visualization config.'
                 ),
             ),
             DeclareLaunchArgument(
@@ -129,7 +160,7 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 'use_rviz',
                 default_value='false',
-                description='Start RViz from the Interbotix bringup.',
+                description='Start RViz with the AuRo visualization config.',
             ),
             DeclareLaunchArgument(
                 'use_sim',

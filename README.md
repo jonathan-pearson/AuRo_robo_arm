@@ -26,6 +26,10 @@ The gripper is a separate actuator and is not counted as one of the 5 arm DOF.
 ## What This Package Provides
 
 - `usb_bringup.launch.py`: starts the Interbotix `xs_sdk` driver using a selected USB port.
+- `view_robot.launch.py`: opens a view-only RViz model with a joint-state GUI for checking the URDF without hardware.
+- `rviz/vx300.rviz`: RViz layout for the AuRo `vx300` namespace.
+- `config/vx300.yaml`: local motor map and joint-limit config for the 5-DOF `vx300`.
+- `config/vx300_arm_only.yaml`: same 5-DOF arm map without the gripper actuator.
 - `nudge_joint`: safely moves one joint by a small relative amount from its current position.
 - `pulse_gripper`: briefly opens or closes the gripper in PWM mode, then sends a stop command.
 - `scan_dynamixels.py`: scans the DYNAMIXEL bus for responding servo IDs.
@@ -47,7 +51,11 @@ Install the minimal system dependencies:
 sudo apt update
 sudo apt install -y \
   ros-jazzy-dynamixel-sdk \
+  ros-jazzy-joint-state-publisher \
+  ros-jazzy-joint-state-publisher-gui \
   ros-jazzy-nav2-msgs \
+  ros-jazzy-robot-state-publisher \
+  ros-jazzy-rviz2 \
   ros-jazzy-tf-transformations \
   python3-transforms3d
 ```
@@ -67,6 +75,55 @@ rosdep install --from-paths \
 colcon build --symlink-install --packages-up-to auro_robo_arm interbotix_xsarm_control
 source install/setup.bash
 ```
+
+## Visualize The Robot In RViz
+
+For a hardware-free model check, launch RViz with a joint-state slider GUI:
+
+```bash
+cd /home/sanat/Arm_Robot/AuRo_robo_arm
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+
+ros2 launch auro_robo_arm view_robot.launch.py \
+  robot_model:=vx300 \
+  robot_name:=vx300
+```
+
+To visualize the physical arm while the driver is running, set `use_rviz:=true` in `usb_bringup.launch.py`.
+
+The RViz config uses `world` as the fixed frame and expects the normal Interbotix `vx300/base_link` TF tree.
+
+## VX300 Joint Limits
+
+The default `usb_bringup.launch.py` now uses this package's `config/vx300.yaml` for `robot_model:=vx300`. It maps the 5-DOF `vx300` hardware correctly:
+
+```text
+waist:        ID 1
+shoulder:     ID 2 + shadow ID 3
+elbow:        ID 4 + shadow ID 5
+wrist_angle:  ID 6
+wrist_rotate: ID 7
+gripper:      ID 8
+```
+
+This model has exactly five arm joints. If you need to launch without the gripper, pass:
+
+```bash
+motor_configs:=src/auro_robo_arm/config/vx300_arm_only.yaml
+```
+
+The arm joint limits are derived from the [Trossen VX300 specification](https://github.com/TrossenRobotics/interbotix_xsarms_docs/blob/main/docs/specifications/vx300.rst):
+
+```text
+waist:        -180 to 180 deg
+shoulder:     -101 to 101 deg
+elbow:        -101 to 92 deg
+wrist_angle:  -107 to 130 deg
+wrist_rotate: -180 to 180 deg
+```
+
+`load_configs:=false` remains the default to avoid unnecessary EEPROM writes during normal bringup. To write the configured limits to the servos, run the driver deliberately once with `load_configs:=true`, then return to `load_configs:=false` for normal sessions.
 
 If you accidentally built from the wrong directory or stale packages are causing trouble:
 
@@ -129,7 +186,7 @@ ros2 launch auro_robo_arm usb_bringup.launch.py \
   use_rviz:=false
 ```
 
-Leave this running. The launch file defaults to the Interbotix `vx300` motor config and generates a temporary mode config that sets:
+Leave this running. The launch file defaults to this package's `vx300` motor config when `robot_model:=vx300` and generates a temporary mode config that sets:
 
 - arm joints to position mode
 - gripper to PWM mode
