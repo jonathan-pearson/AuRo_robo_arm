@@ -25,6 +25,7 @@ setup(
         'console_scripts': [
             'nudge_joint = auro_robo_arm.nudge_joint:main',
             'pulse_gripper = auro_robo_arm.pulse_gripper:main',
+            'tag_detector = auro_robo_arm.tag_detector:main',
         ],
     },
 )

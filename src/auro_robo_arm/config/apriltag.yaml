@@ -1,0 +1,14 @@
+/**:
+    ros__parameters:
+        image_transport: raw
+        family: 36h11          # tag family (36h11 is the most common)
+        size: 0.1              # tag edge size in metres (for pose only, not detection)
+        max_hamming: 0         # 0 = exact match only; raise to 1-2 if missing detections
+
+        detector:
+            threads: 2
+            decimate: 2.0      # lower = more accurate but slower
+            blur: 0.0
+            refine: true
+            sharpening: 0.25
+            debug: false
