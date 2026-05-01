@@ -94,6 +94,23 @@ To visualize the physical arm while the driver is running, set `use_rviz:=true` 
 
 The RViz config uses `world` as the fixed frame and expects the normal Interbotix `vx300/base_link` TF tree.
 
+If the RViz model moves opposite the real arm for the Y-axis pitch joints
+(`shoulder`, `elbow`, or `wrist_angle`), initialize the servo EEPROM once with
+the configured `Drive_Mode` values:
+
+```bash
+ros2 launch auro_robo_arm usb_bringup.launch.py \
+  robot_model:=vx300 \
+  robot_name:=vx300 \
+  port:=/dev/ttyUSB0 \
+  load_configs:=true \
+  use_rviz:=true
+```
+
+After that one-time run, go back to `load_configs:=false` for normal bringup.
+Those pitch joints intentionally use reverse drive mode in the motor config; if
+that EEPROM bit is stale, their published joint states look negated in RViz.
+
 ## VX300 Joint Limits
 
 The default `usb_bringup.launch.py` now uses this package's `config/vx300.yaml` for `robot_model:=vx300`. It maps the 5-DOF `vx300` hardware correctly:

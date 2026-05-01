@@ -61,6 +61,7 @@ def _launch_setup(context, *args, **kwargs):
     port = LaunchConfiguration('port').perform(context)
     motor_configs = LaunchConfiguration('motor_configs').perform(context)
     rvizconfig = LaunchConfiguration('rvizconfig').perform(context)
+    base_yaw = LaunchConfiguration('base_yaw').perform(context)
     use_rviz = _bool_text(LaunchConfiguration('use_rviz').perform(context))
     use_sim = _bool_text(LaunchConfiguration('use_sim').perform(context))
     use_sim_time = _bool_text(
@@ -95,7 +96,25 @@ def _launch_setup(context, *args, **kwargs):
                 'use_rviz': 'false',
                 'use_sim': use_sim,
                 'use_sim_time': use_sim_time,
+                'use_world_frame': 'false',
             }.items(),
+        ),
+        Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            name='auro_base_transform_publisher',
+            arguments=[
+                '--x', '0.0',
+                '--y', '0.0',
+                '--z', '0.0',
+                '--roll', '0.0',
+                '--pitch', '0.0',
+                '--yaw', base_yaw,
+                '--frame-id', 'world',
+                '--child-frame-id', f'{robot_name}/base_link',
+            ],
+            parameters=[{'use_sim_time': use_sim_time == 'true'}],
+            output={'both': 'log'},
         ),
         Node(
             condition=IfCondition(use_rviz),
@@ -147,6 +166,14 @@ def generate_launch_description():
                 description=(
                     'Optional RViz config. Leave empty to use the AuRo VX300 '
                     'visualization config.'
+                ),
+            ),
+            DeclareLaunchArgument(
+                'base_yaw',
+                default_value='0.0',
+                description=(
+                    'Yaw, in radians, from world to the arm base. Use pi '
+                    'to rotate the whole visualization 180 degrees about Z.'
                 ),
             ),
             DeclareLaunchArgument(
