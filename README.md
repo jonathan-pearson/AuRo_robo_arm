@@ -7,7 +7,7 @@ ROS 2 Jazzy workspace for controlling an Interbotix X-Series `vx300` robot arm o
 - Robot arm: Interbotix `vx300`
 - Arm DOF: 5-DOF
 - ROS namespace: `vx300`
-- USB interface: U2D2 DYNAMIXEL adapter, usually `/dev/ttyUSB0`
+- USB interface: U2D2 DYNAMIXEL adapter, exposed as `/dev/ttyDXL`
 - Servo IDs found on the working bus: `1-8`
 - ROS distro: Jazzy
 
@@ -51,8 +51,13 @@ Install the minimal system dependencies:
 sudo apt update
 sudo apt install -y \
   ros-jazzy-dynamixel-sdk \
+  ros-jazzy-joint-state-broadcaster \
   ros-jazzy-joint-state-publisher \
   ros-jazzy-joint-state-publisher-gui \
+  ros-jazzy-joint-trajectory-controller \
+  ros-jazzy-moveit-planners-ompl \
+  ros-jazzy-moveit-ros-visualization \
+  ros-jazzy-moveit-simple-controller-manager \
   ros-jazzy-nav2-msgs \
   ros-jazzy-robot-state-publisher \
   ros-jazzy-rviz2 \
@@ -102,7 +107,7 @@ the configured `Drive_Mode` values:
 ros2 launch auro_robo_arm usb_bringup.launch.py \
   robot_model:=vx300 \
   robot_name:=vx300 \
-  port:=/dev/ttyUSB0 \
+  port:=/dev/ttyDXL \
   load_configs:=true \
   use_rviz:=true
 ```
@@ -110,6 +115,35 @@ ros2 launch auro_robo_arm usb_bringup.launch.py \
 After that one-time run, go back to `load_configs:=false` for normal bringup.
 Those pitch joints intentionally use reverse drive mode in the motor config; if
 that EEPROM bit is stale, their published joint states look negated in RViz.
+
+## Control The Robot In MoveIt RViz
+
+MoveIt gives RViz the MotionPlanning panel for drag-to-pose planning and
+trajectory execution. Build the MoveIt and ROS 2 control packages along with
+this package:
+
+```bash
+cd /home/sanat/Arm_Robot/AuRo_robo_arm
+source /opt/ros/jazzy/setup.bash
+colcon build --symlink-install \
+  --packages-up-to auro_robo_arm interbotix_xsarm_moveit \
+  --cmake-args -DBUILD_TESTING=OFF
+source install/setup.bash
+```
+
+Start the physical arm with MoveIt RViz:
+
+```bash
+ros2 launch auro_robo_arm moveit.launch.py \
+  robot_model:=vx300 \
+  robot_name:=vx300 \
+  port:=/dev/ttyDXL \
+  load_configs:=false \
+  use_moveit_rviz:=true
+```
+
+In RViz, use the `MotionPlanning` panel, select the `interbotix_arm` planning
+group, then use `Plan` before `Execute`. Keep the first tests small and slow.
 
 ## VX300 Joint Limits
 
@@ -158,19 +192,27 @@ source install/setup.bash
 
 Plug in and power the arm. The U2D2 USB cable does not power the servos, so the arm power supply must also be on.
 
-Check the device:
+Install the udev rule once to create `/dev/ttyDXL` and grant access to users in
+the `dialout` group:
 
 ```bash
-ls -l /dev/ttyDXL /dev/ttyUSB*
+cd /home/sanat/Arm_Robot/AuRo_robo_arm
+sudo cp udev/99-auro-u2d2.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+sudo usermod -aG dialout "$USER"
 ```
 
-If the device is `/dev/ttyUSB0`, allow access:
+Log out and log back in so the new group membership is applied, then unplug and
+replug the U2D2. Check the device:
 
 ```bash
-sudo chmod a+rw /dev/ttyUSB0
+ls -l /dev/ttyDXL
 ```
 
-Interbotix udev rules can create `/dev/ttyDXL`, but using `/dev/ttyUSB0` directly is fine for testing.
+The Interbotix stack defaults to `/dev/ttyDXL` because it is stable across
+USB replugging. The raw kernel name, such as `/dev/ttyUSB0`, can change if
+another USB serial device is plugged in first.
 
 ## Scan The Servo Bus
 
@@ -179,8 +221,7 @@ Before launching ROS control, verify the DYNAMIXEL bus:
 ```bash
 cd /home/sanat/Arm_Robot/AuRo_robo_arm
 source /opt/ros/jazzy/setup.bash
-sudo chmod a+rw /dev/ttyUSB0
-python3 scripts/scan_dynamixels.py --port /dev/ttyUSB0
+python3 scripts/scan_dynamixels.py
 ```
 
 A working `vx300` should respond on Protocol 2.0 at `1000000` bps with IDs `1-8`.
@@ -193,12 +234,11 @@ Terminal 1:
 cd /home/sanat/Arm_Robot/AuRo_robo_arm
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
-sudo chmod a+rw /dev/ttyUSB0
 
 ros2 launch auro_robo_arm usb_bringup.launch.py \
   robot_model:=vx300 \
   robot_name:=vx300 \
-  port:=/dev/ttyUSB0 \
+  port:=/dev/ttyDXL \
   load_configs:=false \
   use_rviz:=false
 ```
@@ -306,8 +346,8 @@ If scan finds no servos:
 - Make sure the arm power supply is on.
 - Make sure the U2D2 is connected to the DYNAMIXEL bus, not only USB.
 - Check that the 3-pin DYNAMIXEL cables are fully seated.
-- Make sure no other program, such as DYNAMIXEL Wizard, is using `/dev/ttyUSB0`.
-- Run `sudo chmod a+rw /dev/ttyUSB0`.
+- Make sure no other program, such as DYNAMIXEL Wizard, is using `/dev/ttyDXL`.
+- If `/dev/ttyDXL` does not exist, reinstall the udev rule and replug the U2D2.
 
 If `xs_sdk` reports `YAML::BadFile`:
 

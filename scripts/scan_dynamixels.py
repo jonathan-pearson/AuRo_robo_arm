@@ -67,6 +67,13 @@ def scan(
                         print(
                             f'  ID {dxl_id:3d}: model {model_number} responded'
                         )
+                    elif result == COMM_SUCCESS:
+                        found += 1
+                        error_text = packet_handler.getRxPacketError(error)
+                        print(
+                            f'  ID {dxl_id:3d}: model {model_number} responded '
+                            f'with error 0x{error:02x}: {error_text}'
+                        )
                 print()
     finally:
         port_handler.closePort()
@@ -80,7 +87,7 @@ def scan(
 
 def main() -> int:
     parser = ArgumentParser(description=__doc__)
-    parser.add_argument('--port', default='/dev/ttyUSB0')
+    parser.add_argument('--port', default='/dev/ttyDXL')
     parser.add_argument('--baud', default='1000000,57600')
     parser.add_argument('--protocol', default='2.0,1.0')
     parser.add_argument('--ids', default='0-36')

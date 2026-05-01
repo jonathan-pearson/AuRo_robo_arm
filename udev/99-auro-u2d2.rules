@@ -1,0 +1,10 @@
+# AuRo U2D2 DYNAMIXEL adapter.
+#
+# Install with:
+#   sudo cp udev/99-auro-u2d2.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules
+#   sudo udevadm trigger
+#
+# Then unplug and replug the U2D2. Users in the dialout group can open
+# /dev/ttyDXL without chmod.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6014", ENV{ID_MM_DEVICE_IGNORE}="1", ATTR{device/latency_timer}="1", GROUP:="dialout", MODE:="0660", SYMLINK+="ttyDXL"
