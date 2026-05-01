@@ -1,0 +1,19 @@
+# Mode configuration for the Interbotix xs_sdk node.
+#
+# The launch file can generate a temporary copy of this file with a custom port
+# such as /dev/ttyUSB0. Keeping /dev/ttyDXL here matches the Interbotix udev
+# rule default.
+port: /dev/ttyDXL
+
+groups:
+  arm:
+    operating_mode: position
+    profile_type: time
+    profile_velocity: 2000
+    profile_acceleration: 1000
+    torque_enable: true
+
+singles:
+  gripper:
+    operating_mode: pwm
+    torque_enable: true
