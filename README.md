@@ -422,11 +422,10 @@ ros2 launch auro_robo_arm waist_tag_scan.launch.py wrist_px_gain:=-0.0008
 On `turn_off`, the scanner stops scan/track commands, briefly holds the current arm posture, then stows:
 
 ```text
-1. Home step 1: waist and wrist joints go home.
-2. Home step 2: shoulder goes home.
-3. Home step 3: elbow goes home last.
-4. Sleep pose: [0, -1.85, 1.55, 0.8, 0].
-5. Return to idle and wait for the next turn_on.
+1. MoveIt plans and executes the current pose -> Home trajectory.
+2. MoveIt plans and executes the Home -> Sleep trajectory.
+3. If MoveIt is unavailable or cannot find a plan, the stow sequence stops.
+4. Return to idle and wait for the next turn_on.
 ```
 
 You can also run the stow sequence manually while the robot driver is still running:
@@ -434,6 +433,9 @@ You can also run the stow sequence manually while the robot driver is still runn
 ```bash
 ros2 launch auro_robo_arm safe_arm_stow.launch.py
 ```
+
+The stow path is intentionally MoveIt-only. There is no direct joint-command
+fallback for Home or Sleep because an unplanned retract can damage the arm.
 
 ## Troubleshooting
 

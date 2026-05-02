@@ -7,11 +7,14 @@ import sys
 import time
 from typing import Any, Optional
 
+import numpy as np
 import rclpy
 from apriltag_msgs.msg import AprilTagDetectionArray
 from interbotix_xs_msgs.msg import JointGroupCommand
 from interbotix_xs_msgs.msg import JointSingleCommand
 from interbotix_xs_msgs.srv import RobotInfo, TorqueEnable
+from moveit.core.robot_state import RobotState
+from moveit.planning import MoveItPy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from std_msgs.msg import String
@@ -33,6 +36,7 @@ class WaistTagScanner(Node):
             'waist,shoulder,elbow,wrist_angle,wrist_rotate',
         )
         self.declare_parameter('arm_group_name', 'arm')
+        self.declare_parameter('moveit_group_name', 'interbotix_arm')
         self.declare_parameter('preset_settle_sec', 2.0)
         self.declare_parameter('dwell_sec', 1.0)
         self.declare_parameter('settle_sec', 0.4)
@@ -66,8 +70,7 @@ class WaistTagScanner(Node):
         self.declare_parameter('halt_hold_sec', 0.5)
         self.declare_parameter('home_positions', '0,0,0,0,0')
         self.declare_parameter('sleep_positions', '0,-1.85,1.55,0.8,0')
-        self.declare_parameter('staged_home', True)
-        self.declare_parameter('staged_home_step_wait_sec', 1.5)
+        self.declare_parameter('use_moveit_for_stow', True)
         self.declare_parameter('home_wait_sec', 3.0)
         self.declare_parameter('sleep_wait_sec', 3.0)
 
@@ -102,6 +105,8 @@ class WaistTagScanner(Node):
         self._last_log_time = 0.0
         self._active = bool(self.get_parameter('start_active').value)
         self._stow_requested = False
+        self._moveit: Optional[MoveItPy] = None
+        self._moveit_arm = None
 
         self.create_subscription(
             JointState,
@@ -585,47 +590,70 @@ class WaistTagScanner(Node):
     def _stow_home_then_sleep(self) -> None:
         home = self._parse_float_list(self.get_parameter('home_positions').value)
         sleep = self._parse_float_list(self.get_parameter('sleep_positions').value)
-        if bool(self.get_parameter('staged_home').value):
-            self._command_staged_home(home)
-        else:
-            self.get_logger().info(f'Commanding Home pose before shutdown: {home}')
-            self._publish_group_positions(home)
+        if not self._plan_and_execute_group_pose(home, 'Home'):
+            self.get_logger().error(
+                'Stow aborted because MoveIt did not produce a valid Home trajectory.'
+            )
+            return
         self._spin_for(float(self.get_parameter('home_wait_sec').value))
-        self.get_logger().info(f'Commanding Sleep pose before shutdown: {sleep}')
-        self._publish_group_positions(sleep)
+        if not self._plan_and_execute_group_pose(sleep, 'Sleep'):
+            self.get_logger().error(
+                'Sleep retraction was not executed because MoveIt did not '
+                'produce a valid trajectory.'
+            )
         self._spin_for(float(self.get_parameter('sleep_wait_sec').value))
 
-    def _command_staged_home(self, home: list[float]) -> None:
-        current = self._current_group_positions()
-        if current is None or len(current) != len(home):
-            self.get_logger().warning(
-                'Could not read current arm posture; falling back to group Home.'
+    def _plan_and_execute_group_pose(self, positions: list[float], label: str) -> bool:
+        if not bool(self.get_parameter('use_moveit_for_stow').value):
+            self.get_logger().error(
+                'use_moveit_for_stow is false; refusing direct stow actuation.'
             )
-            self._publish_group_positions(home)
-            return
+            return False
+        if len(positions) != len(self.arm_joint_names):
+            self.get_logger().error(
+                f'{label} pose length does not match arm joints; refusing actuation.'
+            )
+            return False
 
-        wait_sec = float(self.get_parameter('staged_home_step_wait_sec').value)
-        staged = list(current)
+        try:
+            if self._moveit is None or self._moveit_arm is None:
+                self.get_logger().info('Initializing MoveIt planner for stow poses.')
+                self._moveit = MoveItPy(node_name='safe_stow_moveit')
+                self._moveit_arm = self._moveit.get_planning_component(
+                    self.get_parameter('moveit_group_name').value
+                )
 
-        # VX300 order: waist, shoulder, elbow, wrist_angle, wrist_rotate.
-        # Bring wrist/waist home first, shoulder second, elbow last.
-        for index in (0, 3, 4):
-            if index < len(staged):
-                staged[index] = home[index]
-        self.get_logger().info(f'Staged Home step 1, wrist/waist: {staged}')
-        self._publish_group_positions(staged)
-        self._spin_for(wait_sec)
+            goal_state = RobotState(self._moveit.get_robot_model())
+            goal_state.set_to_default_values()
+            goal_state.set_joint_group_positions(
+                self.get_parameter('moveit_group_name').value,
+                np.array(positions, dtype=np.float64),
+            )
+            goal_state.update()
 
-        if len(staged) > 1:
-            staged[1] = home[1]
-        self.get_logger().info(f'Staged Home step 2, shoulder: {staged}')
-        self._publish_group_positions(staged)
-        self._spin_for(wait_sec)
+            self.get_logger().info(f'Planning MoveIt {label} trajectory: {positions}')
+            self._moveit_arm.set_start_state_to_current_state()
+            self._moveit_arm.set_goal_state(robot_state=goal_state)
+            plan_result = self._moveit_arm.plan()
+            if not plan_result:
+                self.get_logger().error(
+                    f'MoveIt could not find a {label} trajectory; refusing actuation.'
+                )
+                return False
 
-        if len(staged) > 2:
-            staged[2] = home[2]
-        self.get_logger().info(f'Staged Home step 3, elbow last: {staged}')
-        self._publish_group_positions(staged)
+            self.get_logger().info(f'Executing MoveIt {label} trajectory.')
+            self._moveit.execute(
+                plan_result.trajectory,
+                controllers=[],
+                blocking=True,
+            )
+            self.get_logger().info(f'MoveIt {label} trajectory complete.')
+            return True
+        except Exception as exc:
+            self.get_logger().error(
+                f'MoveIt {label} planning failed ({exc}); refusing actuation.'
+            )
+            return False
 
     def _spin_for(self, duration_sec: float) -> None:
         deadline = time.monotonic() + max(0.0, duration_sec)
